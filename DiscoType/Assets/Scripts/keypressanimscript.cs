@@ -2,13 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
 public class keypressanimscript : MonoBehaviour
 {
-    public Sprite[] frames; // Drag your sprites into this list in the Inspector
+    public Sprite[] frames;
+    public Sprite[] errorFrames; // Drag your ErrorAnimation sprites here
+
     private SpriteRenderer spriteRenderer;
     private int currentFrame = 0;
+    private bool isPlayingError = false;
 
     void Start()
     {
@@ -17,22 +18,33 @@ public class keypressanimscript : MonoBehaviour
             spriteRenderer.sprite = frames[0];
     }
 
-void Update() 
-{
-    if (Input.anyKeyDown && !Input.GetMouseButtonDown(0)  //detects any key press but ignores mouse clicks
-                         && !Input.GetMouseButtonDown(1) 
-                         && !Input.GetMouseButtonDown(2))
+    public void OnCorrectKey()
     {
-        AdvanceFrame();
-    }
-}
+        if (isPlayingError) return; // Don't advance during error animation
 
-    void AdvanceFrame()
-    {
         if (frames.Length == 0) return;
-
-        // Increment frame and loop back to 0 if at the end
         currentFrame = (currentFrame + 1) % frames.Length;
         spriteRenderer.sprite = frames[currentFrame];
+    }
+
+    public void OnWrongKey()
+    {
+        if (isPlayingError) return; // Don't restart if already playing
+        StartCoroutine(PlayErrorAnimation());
+    }
+
+    IEnumerator PlayErrorAnimation()
+    {
+        isPlayingError = true;
+
+        for (int i = 0; i < errorFrames.Length; i++)
+        {
+            spriteRenderer.sprite = errorFrames[i];
+            yield return new WaitForSeconds(0.05f); // Adjust speed as needed
+        }
+
+        // Return to current normal frame when error animation finishes
+        spriteRenderer.sprite = frames[currentFrame];
+        isPlayingError = false;
     }
 }
